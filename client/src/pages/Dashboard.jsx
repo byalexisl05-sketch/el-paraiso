@@ -12,6 +12,13 @@ function getInicioSemana() {
   return new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 6, 5, 0, 0).toISOString()
 }
 
+// Lógica limpia extraída para cumplir con la regla de SonarQube
+function getIconoPago(metodo) {
+  if (metodo === 'efectivo') return '💵'
+  if (metodo === 'transferencia') return '📲'
+  return '⚡'
+}
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [ventasHoy, setVentasHoy] = useState([])
@@ -145,7 +152,7 @@ export default function Dashboard() {
                     <div className="text-xs text-gray-500">
                       {new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
                       {' · '}
-                      {v.metodo_pago === 'efectivo' ? '💵' : v.metodo_pago === 'transferencia' ? '📲' : '⚡'}
+                      {getIconoPago(v.metodo_pago)}
                     </div>
                   </div>
                   <div className="text-sm font-bold text-yellow-400 whitespace-nowrap">

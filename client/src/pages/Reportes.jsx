@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
+// Función auxiliar para limpiar la lógica de iconos de pago exigida por SonarQube
+function getIconoPago(metodoPago) {
+  if (metodoPago === 'efectivo') return '💵'
+  if (metodoPago === 'transferencia') return '📲'
+  return '⚡'
+}
+
 export default function Reportes() {
   const [loading, setLoading] = useState(true)
   const [ventas, setVentas] = useState([])
@@ -66,7 +73,7 @@ export default function Reportes() {
 
   const categoriaLabel = {
     compra_productos: '🛒 Compra productos',
-    servicios:        '💡 Servicios',
+    servicios:         '💡 Servicios',
     transporte:       '🚗 Transporte',
     mantenimiento:    '🔧 Mantenimiento',
     otro:             '📦 Otro'
@@ -129,7 +136,6 @@ export default function Reportes() {
             </div>
           </div>
 
-          {/* Gráfica ventas vs gastos */}
           {dataGrafica.length > 0 && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
               <h2 className="text-sm font-semibold text-white mb-4">Ventas vs Gastos</h2>
@@ -171,7 +177,7 @@ export default function Reportes() {
                       <div className="text-right">
                         <div className="text-sm font-bold text-yellow-400">${Number.parseFloat(v.monto_total).toFixed(2)}</div>
                         <div className="text-xs text-gray-500">
-                          {v.metodo_pago === 'efectivo' ? '💵' : v.metodo_pago === 'transferencia' ? '📲' : '⚡'}
+                          {getIconoPago(v.metodo_pago)}
                         </div>
                       </div>
                     </div>

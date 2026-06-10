@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
+// Lógica limpia extraída para cumplir con la regla de SonarQube
+function getIconoBotonPago(metodo) {
+  if (metodo === 'efectivo') return '💵 Efectivo'
+  if (metodo === 'transferencia') return '📲 Transferencia'
+  return '💳 Pago'
+}
+
 export default function Fiados() {
   const [clientes, setClientes] = useState([])
   const [deudas, setDeudas] = useState([])
@@ -36,7 +43,7 @@ export default function Fiados() {
     const { error } = await supabase.from('clientes').insert([{
       nombre: formCliente.nombre,
       telefono: formCliente.telefono || null,
-      notas: formCliente.notas || null
+      notes: formCliente.notas || null
     }])
     if (error) { toast.error('Error al guardar'); return }
     toast.success('Cliente agregado ✓')
@@ -336,7 +343,7 @@ export default function Fiados() {
             <h2 className="text-lg font-bold text-white mb-1">Registrar abono</h2>
             <p className="text-gray-400 text-sm mb-4">
               {deudaSeleccionada.clientes?.nombre} · Pendiente:
-              <span className="text-red-400 font-bold ml-1">${Number. parseFloat(deudaSeleccionada.monto_pendiente).toFixed(2)}</span>
+              <span className="text-red-400 font-bold ml-1">${Number.parseFloat(deudaSeleccionada.monto_pendiente).toFixed(2)}</span>
             </p>
             <div className="space-y-3">
               <input placeholder="Monto del abono $" type="number" step="0.01" value={formAbono.monto}
@@ -348,7 +355,7 @@ export default function Fiados() {
                     className={`py-2 rounded-lg text-xs font-medium transition-colors ${
                       formAbono.metodo_pago === m ? 'bg-yellow-500 text-gray-950' : 'bg-gray-800 text-gray-400'
                     }`}>
-                    {m === 'efectivo' ? '💵 Efectivo' : '📲 Transferencia'}
+                    {getIconoBotonPago(m)}
                   </button>
                 ))}
               </div>

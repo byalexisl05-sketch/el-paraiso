@@ -2,10 +2,40 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
+// --- Funciones auxiliares para eliminar la complejidad cognitiva (Clean Code) ---
+
 function getInicioDia() {
   const hoy = new Date()
   return new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 5, 0, 0).toISOString()
 }
+
+function getMetodoPagoLabel(metodo) {
+  if (metodo === 'mixto') return '⚡ Mixto'
+  if (metodo === 'efectivo') return '💵 Efectivo'
+  return '📲 Transferencia'
+}
+
+function calcularMontoEfectivo(form) {
+  if (form.metodo_pago === 'efectivo') {
+    return Number.parseFloat(form.monto_total)
+  }
+  if (form.metodo_pago === 'mixto') {
+    return Number.parseFloat(form.monto_efectivo) || 0
+  }
+  return 0
+}
+
+function calcularMontoTransferencia(form) {
+  if (form.metodo_pago === 'transferencia') {
+    return Number.parseFloat(form.monto_total)
+  }
+  if (form.metodo_pago === 'mixto') {
+    return Number.parseFloat(form.monto_transferencia) || 0
+  }
+  return 0
+}
+
+// --- Componente Principal ---
 
 export default function Ventas() {
   const [ventas, setVentas] = useState([])
@@ -47,19 +77,15 @@ export default function Ventas() {
         toast.error('Efectivo + transferencia debe ser igual al total'); return
       }
     }
+
     const { error } = await supabase.from('ventas').insert([{
       descripcion: form.descripcion,
       monto_total: Number.parseFloat(form.monto_total),
       metodo_pago: form.metodo_pago,
-      monto_efectivo: form.metodo_pago === 'efectivo'
-        ? Number.parseFloat(form.monto_total)
-        : form.metodo_pago === 'mixto'
-          ? Number.parseFloat(form.monto_efectivo) || 0 : 0,
-      monto_transferencia: form.metodo_pago === 'transferencia'
-        ? Number.parseFloat(form.monto_total)
-        : form.metodo_pago === 'mixto'
-          ? Number.parseFloat(form.monto_transferencia) || 0 : 0,
+      monto_efectivo: calcularMontoEfectivo(form),
+      monto_transferencia: calcularMontoTransferencia(form),
     }])
+
     if (error) { toast.error('Error al guardar'); return }
     toast.success('Venta registrada ✓')
     setModalAbierto(false)
@@ -94,7 +120,7 @@ export default function Ventas() {
         </button>
       </div>
 
-      {/* Tarjetas */}
+      {/* Tarjetas resumen */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 border-t-2 border-t-yellow-500">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Total hoy</div>
@@ -111,7 +137,7 @@ export default function Ventas() {
         </div>
       </div>
 
-      {/* Tabla */}
+      {/* Tabla de ventas */}
       {loading ? (
         <div className="text-gray-400 text-center py-20">Cargando ventas...</div>
       ) : (
@@ -141,8 +167,7 @@ export default function Ventas() {
                       v.metodo_pago === 'transferencia' ? 'bg-blue-500/10 text-blue-400' :
                       'bg-yellow-500/10 text-yellow-400'
                     }`}>
-                      {v.metodo_pago === 'mixto' ? '⚡ Mixto' :
-                       v.metodo_pago === 'efectivo' ? '💵 Efectivo' : '📲 Transferencia'}
+                      {getMetodoPagoLabel(v.metodo_pago)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-green-400">

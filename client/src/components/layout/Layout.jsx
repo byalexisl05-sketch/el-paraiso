@@ -16,13 +16,13 @@ export default function Layout() {
       <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col">
         {/* Logo */}
         <div className="p-5 border-b border-gray-800">
-          <div className="text-2xl mb-1">🍾</div>
-          <div className="font-bold text-white text-sm leading-tight">
-            Mini Market<br/>El Paraíso
-          </div>
-          <div className="text-xs text-gray-500 mt-1 uppercase tracking-widest">
-            Admin
-          </div>
+         <img src="/logo.png" alt="El Paraíso" className="w-28 h-28 object-cover rounded-xl mx-auto mb-2" />
+         <div className="font-bold text-white text-sm leading-tight text-center">
+          Mini Market<br/>El Paraíso
+         </div>
+         <div className="text-xs text-gray-500 mt-1 uppercase tracking-widest text-center">
+           Admin
+         </div>
         </div>
 
         {/* Nav */}

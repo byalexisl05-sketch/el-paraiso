@@ -85,10 +85,17 @@ export default function Dashboard() {
     <div className="p-6 min-h-screen bg-gray-950">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Buenos días, familia 👋</h1>
-        <p className="text-gray-400 text-sm mt-1 capitalize">{fechaHoy}</p>
+      <div className="flex items-center gap-4 mb-6">
+       <img
+       src="/logo.png"
+       alt="Logo"
+       className="w-14 h-14 object-contain rounded-xl"
+      />
+      <div>
+       <h1 className="text-2xl font-bold text-white">Buen Día👋</h1>
+       <p className="text-gray-400 text-sm mt-1 capitalize">{fechaHoy}</p>
       </div>
+    </div>
 
       {/* Tarjetas */}
       <div className="grid grid-cols-2 gap-4 mb-6">

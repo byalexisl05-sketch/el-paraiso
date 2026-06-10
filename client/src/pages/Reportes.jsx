@@ -37,10 +37,10 @@ export default function Reportes() {
   }
 
   // Totales generales
-  const totalVentas     = ventas.reduce((s, v) => s + parseFloat(v.monto_total), 0)
-  const totalEfectivo   = ventas.reduce((s, v) => s + parseFloat(v.monto_efectivo || 0), 0)
-  const totalTransfer   = ventas.reduce((s, v) => s + parseFloat(v.monto_transferencia || 0), 0)
-  const totalGastos     = gastos.reduce((s, g) => s + parseFloat(g.monto), 0)
+  const totalVentas     = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_total), 0)
+  const totalEfectivo   = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_efectivo || 0), 0)
+  const totalTransfer   = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_transferencia || 0), 0)
+  const totalGastos     = gastos.reduce((s, g) => s + Number.parseFloat(g.monto), 0)
   const gananciaNet     = totalVentas - totalGastos
 
   // Agrupar por día para la gráfica
@@ -48,12 +48,12 @@ export default function Reportes() {
   ventas.forEach(v => {
     const key = new Date(v.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
     if (!porDia[key]) porDia[key] = { dia: key, ventas: 0, gastos: 0 }
-    porDia[key].ventas += parseFloat(v.monto_total)
+    porDia[key].ventas += Number.parseFloat(v.monto_total)
   })
   gastos.forEach(g => {
     const key = new Date(g.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
     if (!porDia[key]) porDia[key] = { dia: key, ventas: 0, gastos: 0 }
-    porDia[key].gastos += parseFloat(g.monto)
+    porDia[key].gastos += Number.parseFloat(g.monto)
   })
   const dataGrafica = Object.values(porDia)
 
@@ -61,7 +61,7 @@ export default function Reportes() {
   const porCategoria = {}
   gastos.forEach(g => {
     if (!porCategoria[g.categoria]) porCategoria[g.categoria] = 0
-    porCategoria[g.categoria] += parseFloat(g.monto)
+    porCategoria[g.categoria] += Number.parseFloat(g.monto)
   })
 
   const categoriaLabel = {
@@ -139,7 +139,7 @@ export default function Reportes() {
                   <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
                   <Tooltip
                     contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
-                    formatter={v => `$${parseFloat(v).toFixed(2)}`}
+                    formatter={v => `$${Number.parseFloat(v).toFixed(2)}`}
                   />
                   <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
                   <Line type="monotone" dataKey="ventas" stroke="#f59e0b" strokeWidth={2} dot={false} name="Ventas" />
@@ -169,7 +169,7 @@ export default function Reportes() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-yellow-400">${parseFloat(v.monto_total).toFixed(2)}</div>
+                        <div className="text-sm font-bold text-yellow-400">${Number.parseFloat(v.monto_total).toFixed(2)}</div>
                         <div className="text-xs text-gray-500">
                           {v.metodo_pago === 'efectivo' ? '💵' : v.metodo_pago === 'transferencia' ? '📲' : '⚡'}
                         </div>
@@ -191,12 +191,12 @@ export default function Reportes() {
                     <div key={cat}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-300">{categoriaLabel[cat] || cat}</span>
-                        <span className="text-red-400 font-bold">${monto.toFixed(2)}</span>
+                        <span className="text-red-400 font-bold">${Number.parseFloat(monto).toFixed(2)}</span>
                       </div>
                       <div className="w-full bg-gray-800 rounded-full h-1.5">
                         <div
                           className="bg-red-500 h-1.5 rounded-full"
-                          style={{ width: `${Math.round((monto / totalGastos) * 100)}%` }}
+                          style={{ width: `${Math.round((Number.parseFloat(monto) / Number.parseFloat(totalGastos)) * 100)}%` }}
                         />
                       </div>
                     </div>

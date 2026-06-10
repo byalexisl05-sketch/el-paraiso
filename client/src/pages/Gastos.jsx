@@ -34,7 +34,7 @@ export default function Gastos() {
     const { error } = await supabase.from('gastos').insert([{
       descripcion: form.descripcion,
       categoria: form.categoria,
-      monto: parseFloat(form.monto),
+      monto: Number.parseFloat(form.monto),
       notas: form.notas || null
     }])
     if (error) { toast.error('Error al guardar'); return }
@@ -52,7 +52,7 @@ export default function Gastos() {
     cargarGastos()
   }
 
-  const totalHoy = gastos.reduce((s, g) => s + parseFloat(g.monto), 0)
+  const totalHoy = gastos.reduce((s, g) => s + Number.parseFloat(g.monto), 0)
 
   const categoriaInfo = {
     compra_productos: { label: 'Compra productos', emoji: '🛒', color: 'text-yellow-400 bg-yellow-500/10' },
@@ -119,7 +119,7 @@ export default function Gastos() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-red-400 font-bold">
-                      -${parseFloat(g.monto).toFixed(2)}
+                      -${Number.parseFloat(g.monto).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => setModalEliminar(g)}
@@ -179,7 +179,7 @@ export default function Gastos() {
             <div className="text-4xl mb-3">🗑️</div>
             <h2 className="text-lg font-bold text-white mb-1">¿Eliminar gasto?</h2>
             <p className="text-gray-400 text-sm mb-1">{modalEliminar.descripcion}</p>
-            <p className="text-red-400 font-bold mb-5">${parseFloat(modalEliminar.monto).toFixed(2)}</p>
+            <p className="text-red-400 font-bold mb-5">${Number.parseFloat(modalEliminar.monto).toFixed(2)}</p>
             <div className="flex gap-3">
               <button onClick={() => setModalEliminar(null)}
                 className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">Cancelar</button>

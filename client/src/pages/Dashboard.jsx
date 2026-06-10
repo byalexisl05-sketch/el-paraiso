@@ -51,18 +51,18 @@ export default function Dashboard() {
     }
     ;(semana || []).forEach(v => {
       const key = new Date(v.fecha).toISOString().split('T')[0]
-      if (dias[key]) dias[key].total += parseFloat(v.monto_total)
+      if (dias[key]) dias[key].total += Number.parseFloat(v.monto_total)
     })
     setVentasSemana(Object.values(dias))
     setLoading(false)
   }
 
-  const totalVentas   = ventasHoy.reduce((s, v) => s + parseFloat(v.monto_total), 0)
-  const totalEfectivo = ventasHoy.reduce((s, v) => s + parseFloat(v.monto_efectivo || 0), 0)
-  const totalTransfer = ventasHoy.reduce((s, v) => s + parseFloat(v.monto_transferencia || 0), 0)
-  const totalGastos   = gastosHoy.reduce((s, g) => s + parseFloat(g.monto), 0)
+  const totalVentas   = ventasHoy.reduce((s, v) => s + Number.parseFloat(v.monto_total), 0)
+  const totalEfectivo = ventasHoy.reduce((s, v) => s + Number.parseFloat(v.monto_efectivo || 0), 0)
+  const totalTransfer = ventasHoy.reduce((s, v) => s + Number.parseFloat(v.monto_transferencia || 0), 0)
+  const totalGastos   = gastosHoy.reduce((s, g) => s + Number.parseFloat(g.monto), 0)
   const gananciaNet   = totalVentas - totalGastos
-  const totalFiados   = fiadosPendientes.reduce((s, d) => s + parseFloat(d.monto_pendiente), 0)
+  const totalFiados   = fiadosPendientes.reduce((s, d) => s + Number.parseFloat(d.monto_pendiente), 0)
 
   const fechaHoy = new Date().toLocaleDateString('es-EC', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -123,7 +123,7 @@ export default function Dashboard() {
             <Tooltip
               contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: '#fff' }}
-              formatter={v => [`$${parseFloat(v).toFixed(2)}`, 'Ventas']}
+              formatter={v => [`$${Number.parseFloat(v).toFixed(2)}`, 'Ventas']}
             />
             <Bar dataKey="total" fill="#f59e0b" radius={[4, 4, 0, 0]} />
           </BarChart>
@@ -149,7 +149,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-sm font-bold text-yellow-400 whitespace-nowrap">
-                    ${parseFloat(v.monto_total).toFixed(2)}
+                    ${Number.parseFloat(v.monto_total).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -177,7 +177,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="text-sm font-bold text-red-400">
-                    ${parseFloat(d.monto_pendiente).toFixed(2)}
+                    ${Number.parseFloat(d.monto_pendiente).toFixed(2)}
                   </div>
                 </div>
               ))}

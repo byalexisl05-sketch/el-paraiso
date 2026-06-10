@@ -41,24 +41,24 @@ export default function Ventas() {
       toast.error('Descripción y monto son obligatorios'); return
     }
     if (form.metodo_pago === 'mixto') {
-      const ef = parseFloat(form.monto_efectivo) || 0
-      const tr = parseFloat(form.monto_transferencia) || 0
-      if (Math.abs(ef + tr - parseFloat(form.monto_total)) > 0.01) {
+      const ef = Number.parseFloat(form.monto_efectivo) || 0
+      const tr = Number.parseFloat(form.monto_transferencia) || 0
+      if (Math.abs(ef + tr - Number.parseFloat(form.monto_total)) > 0.01) {
         toast.error('Efectivo + transferencia debe ser igual al total'); return
       }
     }
     const { error } = await supabase.from('ventas').insert([{
       descripcion: form.descripcion,
-      monto_total: parseFloat(form.monto_total),
+      monto_total: Number.parseFloat(form.monto_total),
       metodo_pago: form.metodo_pago,
       monto_efectivo: form.metodo_pago === 'efectivo'
-        ? parseFloat(form.monto_total)
+        ? Number.parseFloat(form.monto_total)
         : form.metodo_pago === 'mixto'
-          ? parseFloat(form.monto_efectivo) || 0 : 0,
+          ? Number.parseFloat(form.monto_efectivo) || 0 : 0,
       monto_transferencia: form.metodo_pago === 'transferencia'
-        ? parseFloat(form.monto_total)
+        ? Number.parseFloat(form.monto_total)
         : form.metodo_pago === 'mixto'
-          ? parseFloat(form.monto_transferencia) || 0 : 0,
+          ? Number.parseFloat(form.monto_transferencia) || 0 : 0,
     }])
     if (error) { toast.error('Error al guardar'); return }
     toast.success('Venta registrada ✓')
@@ -75,9 +75,9 @@ export default function Ventas() {
     cargarVentas()
   }
 
-  const totalHoy         = ventas.reduce((s, v) => s + parseFloat(v.monto_total), 0)
-  const efectivoHoy      = ventas.reduce((s, v) => s + parseFloat(v.monto_efectivo || 0), 0)
-  const transferenciaHoy = ventas.reduce((s, v) => s + parseFloat(v.monto_transferencia || 0), 0)
+  const totalHoy         = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_total), 0)
+  const efectivoHoy      = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_efectivo || 0), 0)
+  const transferenciaHoy = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_transferencia || 0), 0)
 
   return (
     <div className="p-6 min-h-screen bg-gray-950">
@@ -146,13 +146,13 @@ export default function Ventas() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-green-400">
-                    {parseFloat(v.monto_efectivo) > 0 ? `$${parseFloat(v.monto_efectivo).toFixed(2)}` : '—'}
+                    {Number.parseFloat(v.monto_efectivo) > 0 ? `$${Number.parseFloat(v.monto_efectivo).toFixed(2)}` : '—'}
                   </td>
                   <td className="px-4 py-3 text-right text-blue-400">
-                    {parseFloat(v.monto_transferencia) > 0 ? `$${parseFloat(v.monto_transferencia).toFixed(2)}` : '—'}
+                    {Number.parseFloat(v.monto_transferencia) > 0 ? `$${Number.parseFloat(v.monto_transferencia).toFixed(2)}` : '—'}
                   </td>
                   <td className="px-4 py-3 text-right text-white font-bold">
-                    ${parseFloat(v.monto_total).toFixed(2)}
+                    ${Number.parseFloat(v.monto_total).toFixed(2)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => setModalEliminar(v)}
@@ -230,7 +230,7 @@ export default function Ventas() {
             <div className="text-4xl mb-3">🗑️</div>
             <h2 className="text-lg font-bold text-white mb-1">¿Eliminar venta?</h2>
             <p className="text-gray-400 text-sm mb-1">{modalEliminar.descripcion}</p>
-            <p className="text-red-400 font-bold mb-5">${parseFloat(modalEliminar.monto_total).toFixed(2)}</p>
+            <p className="text-red-400 font-bold mb-5">${Number.parseFloat(modalEliminar.monto_total).toFixed(2)}</p>
             <div className="flex gap-3">
               <button onClick={() => setModalEliminar(null)}
                 className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">Cancelar</button>

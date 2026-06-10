@@ -61,7 +61,7 @@ export default function Fiados() {
     if (!formDeuda.cliente_id || !formDeuda.monto_original || !formDeuda.descripcion) {
       toast.error('Todos los campos son obligatorios'); return
     }
-    const monto = parseFloat(formDeuda.monto_original)
+    const monto = Number.parseFloat(formDeuda.monto_original)
     const { error } = await supabase.from('deudas').insert([{
       cliente_id: formDeuda.cliente_id,
       descripcion: formDeuda.descripcion,
@@ -85,12 +85,12 @@ export default function Fiados() {
 
   async function guardarAbono() {
     if (!formAbono.monto) { toast.error('Ingresa el monto del abono'); return }
-    const abono = parseFloat(formAbono.monto)
-    if (abono > parseFloat(deudaSeleccionada.monto_pendiente)) {
+    const abono = Number.parseFloat(formAbono.monto)
+    if (abono > Number.parseFloat(deudaSeleccionada.monto_pendiente)) {
       toast.error('El abono no puede ser mayor a la deuda pendiente'); return
     }
 
-    const nuevoPendiente = parseFloat(deudaSeleccionada.monto_pendiente) - abono
+    const nuevoPendiente = Number.parseFloat(deudaSeleccionada.monto_pendiente) - abono
     const pagado = nuevoPendiente <= 0
 
     // 1. Actualizar la deuda
@@ -130,7 +130,7 @@ export default function Fiados() {
     cargarDatos()
   }
 
-  const totalPendiente = deudas.reduce((s, d) => s + parseFloat(d.monto_pendiente), 0)
+  const totalPendiente = deudas.reduce((s, d) => s + Number.parseFloat(d.monto_pendiente), 0)
 
   return (
     <div className="p-6 min-h-screen bg-gray-950">
@@ -199,8 +199,8 @@ export default function Fiados() {
                   </td>
                   <td className="px-4 py-3 text-gray-400">{c.telefono || '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <span className={`font-bold ${parseFloat(c.deuda_total) > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                      ${parseFloat(c.deuda_total || 0).toFixed(2)}
+                    <span className={`font-bold ${Number.parseFloat(c.deuda_total) > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      ${Number.parseFloat(c.deuda_total || 0).toFixed(2)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -248,8 +248,8 @@ export default function Fiados() {
                   <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                     {new Date(d.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-400">${parseFloat(d.monto_original).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right text-red-400 font-bold">${parseFloat(d.monto_pendiente).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right text-gray-400">${Number.parseFloat(d.monto_original).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right text-red-400 font-bold">${Number.parseFloat(d.monto_pendiente).toFixed(2)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -336,7 +336,7 @@ export default function Fiados() {
             <h2 className="text-lg font-bold text-white mb-1">Registrar abono</h2>
             <p className="text-gray-400 text-sm mb-4">
               {deudaSeleccionada.clientes?.nombre} · Pendiente:
-              <span className="text-red-400 font-bold ml-1">${parseFloat(deudaSeleccionada.monto_pendiente).toFixed(2)}</span>
+              <span className="text-red-400 font-bold ml-1">${Number. parseFloat(deudaSeleccionada.monto_pendiente).toFixed(2)}</span>
             </p>
             <div className="space-y-3">
               <input placeholder="Monto del abono $" type="number" step="0.01" value={formAbono.monto}
@@ -388,7 +388,7 @@ export default function Fiados() {
             <div className="text-4xl mb-3">🗑️</div>
             <h2 className="text-lg font-bold text-white mb-1">¿Eliminar deuda?</h2>
             <p className="text-gray-400 text-sm mb-1">{modalEliminarDeuda.clientes?.nombre}</p>
-            <p className="text-red-400 font-bold mb-5">${parseFloat(modalEliminarDeuda.monto_pendiente).toFixed(2)}</p>
+            <p className="text-red-400 font-bold mb-5">${Number.parseFloat(modalEliminarDeuda.monto_pendiente).toFixed(2)}</p>
             <div className="flex gap-3">
               <button onClick={() => setModalEliminarDeuda(null)}
                 className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">Cancelar</button>

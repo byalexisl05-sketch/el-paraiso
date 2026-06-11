@@ -250,7 +250,7 @@ export default function Reportes() {
       ) : (
         <>
           {/* Tarjetas resumen */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 border-t-2 border-t-yellow-500">
               <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Total ventas</div>
               <div className="text-2xl font-bold text-yellow-400">${totalVentas.toFixed(2)}</div>
@@ -297,8 +297,7 @@ export default function Reportes() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Detalle ventas */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h2 className="text-sm font-semibold text-white mb-4">Detalle de ventas</h2>

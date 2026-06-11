@@ -224,7 +224,7 @@ export default function Ventas() {
 
       {/* Tarjetas solo en vista hoy */}
       {vista === 'hoy' && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 border-t-2 border-t-yellow-500">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Total hoy</div>
             <div className="text-2xl font-bold text-yellow-400">${totalHoy.toFixed(2)}</div>

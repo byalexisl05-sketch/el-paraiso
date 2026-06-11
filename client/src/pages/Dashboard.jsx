@@ -98,7 +98,7 @@ export default function Dashboard() {
     </div>
 
       {/* Tarjetas */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 border-t-2 border-t-yellow-500">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Ventas hoy</div>
           <div className="text-3xl font-bold text-yellow-400">${totalVentas.toFixed(2)}</div>
@@ -145,7 +145,7 @@ export default function Dashboard() {
       </div>
 
       {/* Últimas ventas + fiados */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white mb-4">Últimas ventas de hoy</h2>
           {ventasHoy.length === 0 ? (

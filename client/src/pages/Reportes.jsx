@@ -1,36 +1,29 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-
-// Función auxiliar para limpiar la lógica de iconos de pago exigida por SonarQube
-function getIconoPago(metodoPago) {
-  if (metodoPago === 'efectivo') return '💵'
-  if (metodoPago === 'transferencia') return '📲'
-  return '⚡'
-}
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export default function Reportes() {
   const [loading, setLoading] = useState(true)
   const [ventas, setVentas] = useState([])
   const [gastos, setGastos] = useState([])
-  const [filtro, setFiltro] = useState('semana') // 'hoy' | 'semana' | 'mes'
+  const [filtro, setFiltro] = useState('semana')
 
-  useEffect(() => {
-    cargarDatos()
-  }, [filtro])
+  useEffect(() => { cargarDatos() }, [filtro])
 
   async function cargarDatos() {
     setLoading(true)
-
     const hoy = new Date()
     let desde
 
     if (filtro === 'hoy') {
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 5, 0, 0)
     } else if (filtro === 'semana') {
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 6)
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 6, 5, 0, 0)
     } else {
-      desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
+      desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 5, 0, 0)
     }
 
     const [{ data: v }, { data: g }] = await Promise.all([
@@ -43,12 +36,11 @@ export default function Reportes() {
     setLoading(false)
   }
 
-  // Totales generales
-  const totalVentas     = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_total), 0)
-  const totalEfectivo   = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_efectivo || 0), 0)
-  const totalTransfer   = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_transferencia || 0), 0)
-  const totalGastos     = gastos.reduce((s, g) => s + Number.parseFloat(g.monto), 0)
-  const gananciaNet     = totalVentas - totalGastos
+  const totalVentas   = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_total), 0)
+  const totalEfectivo = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_efectivo || 0), 0)
+  const totalTransfer = ventas.reduce((s, v) => s + Number.parseFloat(v.monto_transferencia || 0), 0)
+  const totalGastos   = gastos.reduce((s, g) => s + Number.parseFloat(g.monto), 0)
+  const gananciaNet   = totalVentas - totalGastos
 
   // Agrupar por día para la gráfica
   const porDia = {}
@@ -73,13 +65,152 @@ export default function Reportes() {
 
   const categoriaLabel = {
     compra_productos: '🛒 Compra productos',
-    servicios:         '💡 Servicios',
+    servicios:        '💡 Servicios',
     transporte:       '🚗 Transporte',
     mantenimiento:    '🔧 Mantenimiento',
     otro:             '📦 Otro'
   }
 
   const filtroLabel = { hoy: 'Hoy', semana: 'Últimos 7 días', mes: 'Este mes' }
+
+  // ── Exportar Excel ──────────────────────────────────────
+  function exportarExcel() {
+    const wb = XLSX.utils.book_new()
+
+    // Hoja resumen
+    const resumenData = [
+      ['Mini Market El Paraíso — Reporte', filtroLabel[filtro]],
+      [],
+      ['Resumen'],
+      ['Total ventas',   `$${totalVentas.toFixed(2)}`],
+      ['Total gastos',   `$${totalGastos.toFixed(2)}`],
+      ['Ganancia neta',  `$${gananciaNet.toFixed(2)}`],
+      ['Efectivo',       `$${totalEfectivo.toFixed(2)}`],
+      ['Transferencia',  `$${totalTransfer.toFixed(2)}`],
+    ]
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumenData)
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen')
+
+    // Hoja ventas
+    const ventasData = [
+      ['Fecha', 'Hora', 'Descripción', 'Método', 'Efectivo', 'Transferencia', 'Total'],
+      ...ventas.map(v => [
+        new Date(v.fecha).toLocaleDateString('es-EC'),
+        new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        v.descripcion,
+        v.metodo_pago,
+        Number.parseFloat(v.monto_efectivo || 0),
+        Number.parseFloat(v.monto_transferencia || 0),
+        Number.parseFloat(v.monto_total),
+      ])
+    ]
+    const wsVentas = XLSX.utils.aoa_to_sheet(ventasData)
+    XLSX.utils.book_append_sheet(wb, wsVentas, 'Ventas')
+
+    // Hoja gastos
+    const gastosData = [
+      ['Fecha', 'Hora', 'Descripción', 'Categoría', 'Monto'],
+      ...gastos.map(g => [
+        new Date(g.fecha).toLocaleDateString('es-EC'),
+        new Date(g.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        g.descripcion,
+        g.categoria,
+        Number.parseFloat(g.monto),
+      ])
+    ]
+    const wsGastos = XLSX.utils.aoa_to_sheet(gastosData)
+    XLSX.utils.book_append_sheet(wb, wsGastos, 'Gastos')
+
+    const fecha = new Date().toLocaleDateString('es-EC').replace(/\//g, '-')
+    XLSX.writeFile(wb, `reporte-el-paraiso-${fecha}.xlsx`)
+    toast_exportar('Excel descargado ✓')
+  }
+
+  // ── Exportar PDF ────────────────────────────────────────
+  function exportarPDF() {
+    const doc = new jsPDF()
+    const fecha = new Date().toLocaleDateString('es-EC')
+
+    // Título
+    doc.setFontSize(18)
+    doc.setTextColor(40, 40, 40)
+    doc.text('Mini Market El Paraíso', 14, 18)
+    doc.setFontSize(11)
+    doc.setTextColor(100)
+    doc.text(`Reporte: ${filtroLabel[filtro]} — ${fecha}`, 14, 26)
+
+    // Resumen
+    doc.setFontSize(13)
+    doc.setTextColor(40)
+    doc.text('Resumen', 14, 36)
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['Concepto', 'Monto']],
+      body: [
+        ['Total ventas',  `$${totalVentas.toFixed(2)}`],
+        ['Total gastos',  `$${totalGastos.toFixed(2)}`],
+        ['Ganancia neta', `$${gananciaNet.toFixed(2)}`],
+        ['Efectivo',      `$${totalEfectivo.toFixed(2)}`],
+        ['Transferencia', `$${totalTransfer.toFixed(2)}`],
+      ],
+      headStyles: { fillColor: [245, 158, 11] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Ventas
+    const y1 = doc.lastAutoTable.finalY + 10
+    doc.setFontSize(13)
+    doc.text('Detalle de ventas', 14, y1)
+
+    autoTable(doc, {
+      startY: y1 + 4,
+      head: [['Fecha', 'Descripción', 'Método', 'Total']],
+      body: ventas.map(v => [
+        new Date(v.fecha).toLocaleDateString('es-EC') + ' ' +
+          new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        v.descripcion,
+        v.metodo_pago,
+        `$${Number.parseFloat(v.monto_total).toFixed(2)}`
+      ]),
+      headStyles: { fillColor: [245, 158, 11] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { left: 14, right: 14 },
+    })
+
+    // Gastos
+    const y2 = doc.lastAutoTable.finalY + 10
+    doc.setFontSize(13)
+    doc.text('Detalle de gastos', 14, y2)
+
+    autoTable(doc, {
+      startY: y2 + 4,
+      head: [['Fecha', 'Descripción', 'Categoría', 'Monto']],
+      body: gastos.map(g => [
+        new Date(g.fecha).toLocaleDateString('es-EC') + ' ' +
+          new Date(g.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        g.descripcion,
+        g.categoria,
+        `$${Number.parseFloat(g.monto).toFixed(2)}`
+      ]),
+      headStyles: { fillColor: [239, 68, 68] },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { left: 14, right: 14 },
+    })
+
+    const nombreArchivo = `reporte-el-paraiso-${fecha.replace(/\//g, '-')}.pdf`
+    doc.save(nombreArchivo)
+    toast_exportar('PDF descargado ✓')
+  }
+
+  function toast_exportar(msg) {
+    const el = document.createElement('div')
+    el.textContent = msg
+    el.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#f59e0b;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999'
+    document.body.appendChild(el)
+    setTimeout(() => el.remove(), 2500)
+  }
 
   return (
     <div className="p-6 min-h-screen bg-gray-950">
@@ -90,17 +221,27 @@ export default function Reportes() {
           <h1 className="text-2xl font-bold text-white">Reportes</h1>
           <p className="text-gray-400 text-sm mt-1">{filtroLabel[filtro]}</p>
         </div>
-
-        {/* Filtros */}
-        <div className="flex gap-2 bg-gray-900 p-1 rounded-lg">
-          {['hoy', 'semana', 'mes'].map(f => (
-            <button key={f} onClick={() => setFiltro(f)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                filtro === f ? 'bg-yellow-500 text-gray-950' : 'text-gray-400 hover:text-white'
-              }`}>
-              {filtroLabel[f]}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          {/* Filtros */}
+          <div className="flex gap-1 bg-gray-900 p-1 rounded-lg">
+            {['hoy', 'semana', 'mes'].map(f => (
+              <button key={f} onClick={() => setFiltro(f)}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  filtro === f ? 'bg-yellow-500 text-gray-950' : 'text-gray-400 hover:text-white'
+                }`}>
+                {filtroLabel[f]}
+              </button>
+            ))}
+          </div>
+          {/* Botones exportar */}
+          <button onClick={exportarExcel}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+            📊 Excel
+          </button>
+          <button onClick={exportarPDF}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+            📄 PDF
+          </button>
         </div>
       </div>
 
@@ -130,12 +271,13 @@ export default function Reportes() {
               <div className="text-xs text-gray-500 mt-1">{gastos.length} registros</div>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 border-t-2 border-t-blue-500">
-              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Por transferencia</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Transferencias</div>
               <div className="text-2xl font-bold text-blue-400">${totalTransfer.toFixed(2)}</div>
               <div className="text-xs text-gray-500 mt-1">💵 Efectivo: ${totalEfectivo.toFixed(2)}</div>
             </div>
           </div>
 
+          {/* Gráfica */}
           {dataGrafica.length > 0 && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
               <h2 className="text-sm font-semibold text-white mb-4">Ventas vs Gastos</h2>
@@ -175,9 +317,11 @@ export default function Reportes() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-yellow-400">${Number.parseFloat(v.monto_total).toFixed(2)}</div>
+                        <div className="text-sm font-bold text-yellow-400">
+                          ${Number.parseFloat(v.monto_total).toFixed(2)}
+                        </div>
                         <div className="text-xs text-gray-500">
-                          {getIconoPago(v.metodo_pago)}
+                          {v.metodo_pago === 'efectivo' ? '💵' : v.metodo_pago === 'transferencia' ? '📲' : '⚡'}
                         </div>
                       </div>
                     </div>
@@ -197,12 +341,12 @@ export default function Reportes() {
                     <div key={cat}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-300">{categoriaLabel[cat] || cat}</span>
-                        <span className="text-red-400 font-bold">${Number.parseFloat(monto).toFixed(2)}</span>
+                        <span className="text-red-400 font-bold">${monto.toFixed(2)}</span>
                       </div>
                       <div className="w-full bg-gray-800 rounded-full h-1.5">
                         <div
                           className="bg-red-500 h-1.5 rounded-full"
-                          style={{ width: `${Math.round((Number.parseFloat(monto) / Number.parseFloat(totalGastos)) * 100)}%` }}
+                          style={{ width: `${Math.round((monto / totalGastos) * 100)}%` }}
                         />
                       </div>
                     </div>

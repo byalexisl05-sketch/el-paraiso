@@ -5,6 +5,30 @@ import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+// ✅ Fuera del componente — resuelve el issue de SonarQube
+function toastExportar(msg) {
+  const el = document.createElement('div')
+  el.textContent = msg
+  el.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#f59e0b;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999'
+  document.body.appendChild(el)
+  setTimeout(() => el.remove(), 2500)
+}
+
+// ✅ Funciones extraídas para evitar ternarios anidados
+function claseMetodoPago(metodo) {
+  if (metodo === 'efectivo') return '💵'
+  if (metodo === 'transferencia') return '📲'
+  return '⚡'
+}
+
+function formatFecha(fecha) {
+  return new Date(fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
+}
+
+function formatHora(fecha) {
+  return new Date(fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function Reportes() {
   const [loading, setLoading] = useState(true)
   const [ventas, setVentas] = useState([])
@@ -45,12 +69,12 @@ export default function Reportes() {
   // Agrupar por día para la gráfica
   const porDia = {}
   ventas.forEach(v => {
-    const key = new Date(v.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
+    const key = formatFecha(v.fecha)
     if (!porDia[key]) porDia[key] = { dia: key, ventas: 0, gastos: 0 }
     porDia[key].ventas += Number.parseFloat(v.monto_total)
   })
   gastos.forEach(g => {
-    const key = new Date(g.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })
+    const key = formatFecha(g.fecha)
     if (!porDia[key]) porDia[key] = { dia: key, ventas: 0, gastos: 0 }
     porDia[key].gastos += Number.parseFloat(g.monto)
   })
@@ -73,30 +97,26 @@ export default function Reportes() {
 
   const filtroLabel = { hoy: 'Hoy', semana: 'Últimos 7 días', mes: 'Este mes' }
 
-  // ── Exportar Excel ──────────────────────────────────────
   function exportarExcel() {
     const wb = XLSX.utils.book_new()
 
-    // Hoja resumen
     const resumenData = [
       ['Mini Market El Paraíso — Reporte', filtroLabel[filtro]],
       [],
       ['Resumen'],
-      ['Total ventas',   `$${totalVentas.toFixed(2)}`],
-      ['Total gastos',   `$${totalGastos.toFixed(2)}`],
-      ['Ganancia neta',  `$${gananciaNet.toFixed(2)}`],
-      ['Efectivo',       `$${totalEfectivo.toFixed(2)}`],
-      ['Transferencia',  `$${totalTransfer.toFixed(2)}`],
+      ['Total ventas',  `$${totalVentas.toFixed(2)}`],
+      ['Total gastos',  `$${totalGastos.toFixed(2)}`],
+      ['Ganancia neta', `$${gananciaNet.toFixed(2)}`],
+      ['Efectivo',      `$${totalEfectivo.toFixed(2)}`],
+      ['Transferencia', `$${totalTransfer.toFixed(2)}`],
     ]
-    const wsResumen = XLSX.utils.aoa_to_sheet(resumenData)
-    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumenData), 'Resumen')
 
-    // Hoja ventas
     const ventasData = [
       ['Fecha', 'Hora', 'Descripción', 'Método', 'Efectivo', 'Transferencia', 'Total'],
       ...ventas.map(v => [
-        new Date(v.fecha).toLocaleDateString('es-EC'),
-        new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        formatFecha(v.fecha),
+        formatHora(v.fecha),
         v.descripcion,
         v.metodo_pago,
         Number.parseFloat(v.monto_efectivo || 0),
@@ -104,34 +124,29 @@ export default function Reportes() {
         Number.parseFloat(v.monto_total),
       ])
     ]
-    const wsVentas = XLSX.utils.aoa_to_sheet(ventasData)
-    XLSX.utils.book_append_sheet(wb, wsVentas, 'Ventas')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ventasData), 'Ventas')
 
-    // Hoja gastos
     const gastosData = [
       ['Fecha', 'Hora', 'Descripción', 'Categoría', 'Monto'],
       ...gastos.map(g => [
-        new Date(g.fecha).toLocaleDateString('es-EC'),
-        new Date(g.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        formatFecha(g.fecha),
+        formatHora(g.fecha),
         g.descripcion,
         g.categoria,
         Number.parseFloat(g.monto),
       ])
     ]
-    const wsGastos = XLSX.utils.aoa_to_sheet(gastosData)
-    XLSX.utils.book_append_sheet(wb, wsGastos, 'Gastos')
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(gastosData), 'Gastos')
 
     const fecha = new Date().toLocaleDateString('es-EC').replace(/\//g, '-')
     XLSX.writeFile(wb, `reporte-el-paraiso-${fecha}.xlsx`)
-    toast_exportar('Excel descargado ✓')
+    toastExportar('Excel descargado ✓')
   }
 
-  // ── Exportar PDF ────────────────────────────────────────
   function exportarPDF() {
     const doc = new jsPDF()
     const fecha = new Date().toLocaleDateString('es-EC')
 
-    // Título
     doc.setFontSize(18)
     doc.setTextColor(40, 40, 40)
     doc.text('Mini Market El Paraíso', 14, 18)
@@ -139,7 +154,6 @@ export default function Reportes() {
     doc.setTextColor(100)
     doc.text(`Reporte: ${filtroLabel[filtro]} — ${fecha}`, 14, 26)
 
-    // Resumen
     doc.setFontSize(13)
     doc.setTextColor(40)
     doc.text('Resumen', 14, 36)
@@ -159,7 +173,6 @@ export default function Reportes() {
       margin: { left: 14, right: 14 },
     })
 
-    // Ventas
     const y1 = doc.lastAutoTable.finalY + 10
     doc.setFontSize(13)
     doc.text('Detalle de ventas', 14, y1)
@@ -168,8 +181,7 @@ export default function Reportes() {
       startY: y1 + 4,
       head: [['Fecha', 'Descripción', 'Método', 'Total']],
       body: ventas.map(v => [
-        new Date(v.fecha).toLocaleDateString('es-EC') + ' ' +
-          new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        `${formatFecha(v.fecha)} ${formatHora(v.fecha)}`,
         v.descripcion,
         v.metodo_pago,
         `$${Number.parseFloat(v.monto_total).toFixed(2)}`
@@ -179,7 +191,6 @@ export default function Reportes() {
       margin: { left: 14, right: 14 },
     })
 
-    // Gastos
     const y2 = doc.lastAutoTable.finalY + 10
     doc.setFontSize(13)
     doc.text('Detalle de gastos', 14, y2)
@@ -188,8 +199,7 @@ export default function Reportes() {
       startY: y2 + 4,
       head: [['Fecha', 'Descripción', 'Categoría', 'Monto']],
       body: gastos.map(g => [
-        new Date(g.fecha).toLocaleDateString('es-EC') + ' ' +
-          new Date(g.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' }),
+        `${formatFecha(g.fecha)} ${formatHora(g.fecha)}`,
         g.descripcion,
         g.categoria,
         `$${Number.parseFloat(g.monto).toFixed(2)}`
@@ -199,30 +209,20 @@ export default function Reportes() {
       margin: { left: 14, right: 14 },
     })
 
-    const nombreArchivo = `reporte-el-paraiso-${fecha.replace(/\//g, '-')}.pdf`
-    doc.save(nombreArchivo)
-    toast_exportar('PDF descargado ✓')
-  }
-
-  function toast_exportar(msg) {
-    const el = document.createElement('div')
-    el.textContent = msg
-    el.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#f59e0b;color:#000;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;z-index:9999'
-    document.body.appendChild(el)
-    setTimeout(() => el.remove(), 2500)
+    doc.save(`reporte-el-paraiso-${fecha.replace(/\//g, '-')}.pdf`)
+    toastExportar('PDF descargado ✓')
   }
 
   return (
     <div className="p-6 min-h-screen bg-gray-950">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Reportes</h1>
           <p className="text-gray-400 text-sm mt-1">{filtroLabel[filtro]}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Filtros */}
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-1 bg-gray-900 p-1 rounded-lg">
             {['hoy', 'semana', 'mes'].map(f => (
               <button key={f} onClick={() => setFiltro(f)}
@@ -233,7 +233,6 @@ export default function Reportes() {
               </button>
             ))}
           </div>
-          {/* Botones exportar */}
           <button onClick={exportarExcel}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
             📊 Excel
@@ -298,6 +297,7 @@ export default function Reportes() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
             {/* Detalle ventas */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h2 className="text-sm font-semibold text-white mb-4">Detalle de ventas</h2>
@@ -310,18 +310,11 @@ export default function Reportes() {
                       <div className="flex-1 min-w-0 mr-2">
                         <div className="text-sm text-white truncate">{v.descripcion}</div>
                         <div className="text-xs text-gray-500">
-                          {new Date(v.fecha).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' })}
-                          {' '}
-                          {new Date(v.fecha).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
+                          {formatFecha(v.fecha)} {formatHora(v.fecha)} · {claseMetodoPago(v.metodo_pago)}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-yellow-400">
-                          ${Number.parseFloat(v.monto_total).toFixed(2)}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {v.metodo_pago === 'efectivo' ? '💵' : v.metodo_pago === 'transferencia' ? '📲' : '⚡'}
-                        </div>
+                      <div className="text-sm font-bold text-yellow-400">
+                        ${Number.parseFloat(v.monto_total).toFixed(2)}
                       </div>
                     </div>
                   ))}

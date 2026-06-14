@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import PropTypes from 'prop-types'
 
 function getInicioDia() {
   const hoy = new Date()
@@ -17,7 +18,6 @@ const categoriaInfo = {
 
 const formVacio = { descripcion: '', categoria: 'compra_productos', monto: '', notas: '' }
 
-// ✅ Definido FUERA del componente principal
 function ModalGasto({ titulo, data, setData, onGuardar, onCerrar }) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -57,11 +57,13 @@ function ModalGasto({ titulo, data, setData, onGuardar, onCerrar }) {
           />
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onCerrar}
+          <button
+            onClick={onCerrar}
             className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">
             Cancelar
           </button>
-          <button onClick={onGuardar}
+          <button
+            onClick={onGuardar}
             className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold py-2 rounded-lg text-sm">
             Guardar
           </button>
@@ -69,6 +71,19 @@ function ModalGasto({ titulo, data, setData, onGuardar, onCerrar }) {
       </div>
     </div>
   )
+}
+
+ModalGasto.propTypes = {
+  titulo: PropTypes.string.isRequired,
+  data: PropTypes.shape({
+    descripcion: PropTypes.string,
+    categoria: PropTypes.string,
+    monto: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    notas: PropTypes.string,
+  }).isRequired,
+  setData: PropTypes.func.isRequired,
+  onGuardar: PropTypes.func.isRequired,
+  onCerrar: PropTypes.func.isRequired,
 }
 
 export default function Gastos() {
@@ -160,7 +175,8 @@ export default function Gastos() {
           <h1 className="text-2xl font-bold text-white">Gastos</h1>
           <p className="text-gray-400 text-sm mt-1">{gastosFiltrados.length} registros</p>
         </div>
-        <button onClick={() => setModalAbierto(true)}
+        <button
+          onClick={() => setModalAbierto(true)}
           className="bg-yellow-500 hover:bg-yellow-400 text-gray-950 font-bold px-4 py-2 rounded-lg text-sm transition-colors">
           + Registrar gasto
         </button>
@@ -178,14 +194,20 @@ export default function Gastos() {
       {/* Tabs + Buscador */}
       <div className="flex items-center gap-3 mb-4">
         <div className="flex gap-1 bg-gray-900 p-1 rounded-lg">
-          <button onClick={() => setVista('hoy')}
+          <button
+            onClick={() => setVista('hoy')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               vista === 'hoy' ? 'bg-yellow-500 text-gray-950' : 'text-gray-400 hover:text-white'
-            }`}>Hoy</button>
-          <button onClick={() => setVista('historial')}
+            }`}>
+            Hoy
+          </button>
+          <button
+            onClick={() => setVista('historial')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               vista === 'historial' ? 'bg-yellow-500 text-gray-950' : 'text-gray-400 hover:text-white'
-            }`}>Historial</button>
+            }`}>
+            Historial
+          </button>
         </div>
         <input
           type="text"
@@ -238,11 +260,13 @@ export default function Gastos() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => abrirEditar(g)}
+                        <button
+                          onClick={() => abrirEditar(g)}
                           className="text-xs text-yellow-400 hover:bg-yellow-500/10 px-2 py-1 rounded transition-colors">
                           ✏️
                         </button>
-                        <button onClick={() => setModalEliminar(g)}
+                        <button
+                          onClick={() => setModalEliminar(g)}
                           className="text-xs text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition-colors">
                           🗑
                         </button>
@@ -296,11 +320,13 @@ export default function Gastos() {
               ${Number.parseFloat(modalEliminar.monto).toFixed(2)}
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setModalEliminar(null)}
+              <button
+                onClick={() => setModalEliminar(null)}
                 className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg text-sm">
                 Cancelar
               </button>
-              <button onClick={eliminarGasto}
+              <button
+                onClick={eliminarGasto}
                 className="flex-1 bg-red-500 hover:bg-red-400 text-white font-bold py-2 rounded-lg text-sm">
                 Sí, eliminar
               </button>

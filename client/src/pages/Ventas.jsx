@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import PropTypes from 'prop-types'
 
 function getInicioDia() {
   const hoy = new Date()
   return new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 5, 0, 0).toISOString()
 }
 
-// ✅ Definido FUERA del componente principal para evitar el bug del input
+function etiquetaMetodoPago(metodo) {
+  if (metodo === 'efectivo') return '💵 Efectivo'
+  if (metodo === 'transferencia') return '📲 Transfer.'
+  return '⚡ Mixto'
+}
+
+function claseMetodoPago(metodo) {
+  if (metodo === 'efectivo') return 'bg-green-500/10 text-green-400'
+  if (metodo === 'transferencia') return 'bg-blue-500/10 text-blue-400'
+  return 'bg-yellow-500/10 text-yellow-400'
+}
+
+function etiquetaMetodo(metodo) {
+  if (metodo === 'mixto') return '⚡ Mixto'
+  if (metodo === 'efectivo') return '💵 Efectivo'
+  return '📲 Transferencia'
+}
+
 function ModalVenta({ titulo, data, setData, onGuardar, onCerrar }) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -36,7 +54,7 @@ function ModalVenta({ titulo, data, setData, onGuardar, onCerrar }) {
                     ? 'bg-yellow-500 text-gray-950'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                 }`}>
-                {m === 'efectivo' ? '💵 Efectivo' : m === 'transferencia' ? '📲 Transfer.' : '⚡ Mixto'}
+                {etiquetaMetodoPago(m)}
               </button>
             ))}
           </div>
@@ -80,6 +98,21 @@ function ModalVenta({ titulo, data, setData, onGuardar, onCerrar }) {
       </div>
     </div>
   )
+}
+
+ModalVenta.propTypes = {
+  titulo: PropTypes.string.isRequired,
+  data: PropTypes.shape({
+    descripcion: PropTypes.string,
+    monto_total: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    metodo_pago: PropTypes.string,
+    monto_efectivo: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    monto_transferencia: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    notas: PropTypes.string,
+  }).isRequired,
+  setData: PropTypes.func.isRequired,
+  onGuardar: PropTypes.func.isRequired,
+  onCerrar: PropTypes.func.isRequired,
 }
 
 const formVacio = {
@@ -292,16 +325,8 @@ export default function Ventas() {
                   </td>
                   <td className="px-4 py-3 text-white">{v.descripcion}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      v.metodo_pago === 'efectivo'
-                        ? 'bg-green-500/10 text-green-400'
-                        : v.metodo_pago === 'transferencia'
-                          ? 'bg-blue-500/10 text-blue-400'
-                          : 'bg-yellow-500/10 text-yellow-400'
-                    }`}>
-                      {v.metodo_pago === 'mixto' ? '⚡ Mixto'
-                        : v.metodo_pago === 'efectivo' ? '💵 Efectivo'
-                        : '📲 Transferencia'}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${claseMetodoPago(v.metodo_pago)}`}>
+                      {etiquetaMetodo(v.metodo_pago)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-green-400">

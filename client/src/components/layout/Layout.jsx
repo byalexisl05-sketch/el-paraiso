@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 
 const navItems = [
+  { to: '/compras', icon: '🧾', label: 'Compras' },
   { to: '/dashboard', icon: '◈', label: 'Dashboard' },
   { to: '/ventas',    icon: '🛒', label: 'Ventas' },
   { to: '/gastos',    icon: '💸', label: 'Gastos' },

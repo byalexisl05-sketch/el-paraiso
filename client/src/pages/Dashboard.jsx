@@ -121,7 +121,7 @@ export default function Dashboard() {
           <div className="text-xs text-gray-500 mt-2">{gastosHoy.length} registros</div>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 border-t-2 border-t-violet-500">
-          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Deudores Pendientes</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Clientes deudores</div>
           <div className="text-3xl font-bold text-violet-400">${totalFiados.toFixed(2)}</div>
           <div className="text-xs text-gray-500 mt-2">{fiadosPendientes.length} deudas activas</div>
         </div>
